@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Group Chat</title>
+</head>
+
+<body>
+    <h1>WebSocket Chat</h1>
+    <p>Your User ID: <span id="userId">Loading...</span></p>
+    <p>Your Username: <span id="username">Loading...</span></p>
+    <input id="newUsername" type="text" placeholder="Set username">
+    <button onclick="setUsername()">Set Username</button>
+
+    <h2>Connected Users</h2>
+    <select id="recipientId">
+        <option value="all">Group Chat (Everyone)</option>
+    </select>
+
+    <h2>Messages</h2>
+    <ul id="messages"></ul>
+
+    <input id="message" type="text" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        const ws = new WebSocket("ws://localhost:3000");
+        let myUserId = null;
+
+        ws.onmessage = async (event) => {
+            const data = JSON.parse(await event.data);
+
+            if (data.type === "user_info") {
+                console.log(data);
+                myUserId = data.userId;
+                document.getElementById("userId").textContent = myUserId;
+                document.getElementById("username").textContent = data.username;
+            }
+            else if (data.type === "user_list") {
+                updateUserList(data.users);
+            }
+            else if (data.type === "chat") {
+                const li = document.createElement("li");
+                li.textContent = `[${data.timestamp}] ${data.senderName}: ${data.text}`;
+                document.getElementById("messages").appendChild(li);
+            }
+        };
+
+        function setUsername() {
+            const newUsername = document.getElementById("newUsername").value.trim();
+            if (!newUsername) return;
+
+            ws.send(JSON.stringify({ type: "set_username", username: newUsername }));
+            document.getElementById("username").textContent = newUsername;
+            document.getElementById("newUsername").value = "";
+        }
+
+        function updateUserList(users) {
+            const select = document.getElementById("recipientId");
+            select.innerHTML = '<option value="all">Group Chat (Everyone)</option>';
+
+            users.forEach(user => {
+                if (user.userId !== myUserId) {
+                    const option = document.createElement("option");
+                    option.value = user.userId;
+                    option.textContent = `${user.username} (${user.userId.slice(0, 4)})`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        function sendMessage() {
+            const recipientId = document.getElementById("recipientId").value;
+            const text = document.getElementById("message").value.trim();
+
+            if (!text) {
+                alert("Message cannot be empty!");
+                return;
+            }
+
+            ws.send(JSON.stringify({
+                type: "chat",
+                recipientId,
+                text
+            }));
+
+            document.getElementById("message").value = "";
+        }
+    </script>
+</body>
+
+</html>
