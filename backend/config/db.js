@@ -25,8 +25,23 @@ testConnection();
 
 const User = require("../models/User")(sequelize);
 const UserFriend = require("../models/UserFriend")(sequelize, User);
+const { UserInvitation } = require("../models/UserInvitation")(sequelize, User);
+
+const dbContext = {
+    User: User,
+    UserFriend: UserFriend,
+    UserInvitation: UserInvitation,
+}
 const UserRepository = require("../repositories/UserRepository");
+const userRepository = new UserRepository(dbContext);
 
-const userRepository = new UserRepository(User, UserFriend);
+const UserInvitationRepository = require("../repositories/UserInvitationRepository")
+const userInvitationRepository = new UserInvitationRepository(dbContext)
 
-module.exports = { sequelize, User, UserFriend, userRepository };
+module.exports = { 
+    sequelize, 
+    dbContext,
+    User, 
+    UserFriend, 
+    userRepository, 
+    userInvitationRepository };

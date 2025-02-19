@@ -1,17 +1,15 @@
-const UserFriend = require("../models/UserFriend");
 const bcrypt = require("bcryptjs");
 
 class UserRepository {
     SALT_ROUNDS = 10;
     MIN_PASSWORD_LENGTH = 6;
 
-    constructor(UserModel, UserFriendModel) {
-        this.User = UserModel;
-        this.UserFriend = UserFriendModel;
+    constructor(context) {
+        this.context = context
     }
 
     async getAllUsers() {
-        return await this.User.findAll();
+        return await this.context.User.findAll();
     }
 
     async createUser(username, email, password) {
@@ -19,11 +17,11 @@ class UserRepository {
             throw new Error(`Password must be at least ${this.MIN_PASSWORD_LENGTH} characters long`);
         }
         let hashedPassword = await bcrypt.hash(password, this.SALT_ROUNDS);
-        return await this.User.create({ username, email, hashedPassword });
+        return await this.context.User.create({ username, email, hashedPassword });
     }
 
     async sendFriendRequest(senderId, receiverId) {
-        return await this.UserFriend.create({ senderId, receiverId });
+        return await this.context.UserFriend.create({ senderId, receiverId });
     }
 }
 

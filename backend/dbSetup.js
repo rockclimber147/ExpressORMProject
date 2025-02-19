@@ -1,13 +1,11 @@
-const sequelize = require("./config/db");
-const User = require("./models/User");
-const UserFriend = require("./models/UserFriend");
+const { sequelize, dbContext } = require("./config/db");
 
 async function setupDatabase() {
     try {
         await sequelize.sync({ force: false }); // Ensures tables exist without dropping them
 
         // Check if users already exist
-        const userCount = await User.count();
+        const userCount = await dbContext.User.count();
         if (userCount > 0) {
             console.log("Users already exist. Skipping seeding.");
             return;
